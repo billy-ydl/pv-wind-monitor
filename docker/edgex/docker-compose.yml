@@ -354,7 +354,7 @@ services:
     command:
       - -cp=keeper.http://edgex-core-keeper:59890
       - --registry
-      - --profile==devices.virtual.5sensors
+      - --profile==devices.virtual.sensors
     container_name: edgex-device-virtual
     depends_on:
       core-common-config-bootstrapper:
@@ -372,8 +372,11 @@ services:
     environment:
       EDGEX_SECURITY_SECRET_STORE: "false"
       SERVICE_HOST: edgex-device-virtual
-      # 配置5个模拟传感器
-      DEVICE_VIRTUAL_DEVICES: '[{"name":"WindLoadSensor1","profileName":"WindLoad","autoEvents":[{"interval":"10ms","onChange":false}]},{"name":"WindLoadSensor2","profileName":"WindLoad","autoEvents":[{"interval":"10ms","onChange":false}]},{"name":"DisplacementSensor1","profileName":"Displacement","autoEvents":[{"interval":"10ms","onChange":false}]},{"name":"AngleSensor1","profileName":"Angle","autoEvents":[{"interval":"10ms","onChange":false}]},{"name":"CableForceSensor1","profileName":"CableForce","autoEvents":[{"interval":"10ms","onChange":false}]}]'
+      #   定义1个模拟传感器（位移）
+      DEVICE_VIRTUAL_DEVICES: >
+        [
+          {"name":"DisplacementSensor1","profileName":"Displacement","autoEvents":[{"interval":"10ms","onChange":false}]},
+        ]
     hostname: edgex-device-virtual
     image: nexus3.edgexfoundry.org:10004/device-virtual:latest
     networks:
@@ -390,9 +393,10 @@ services:
       - no-new-privileges:true
     user: 2002:2001
     volumes:
+      # 挂载自定义设备配置文件目录到容器内      
       - type: bind
-        source: /etc/localtime
-        target: /etc/localtime
+        source: ../../edgex-module/edgex-config/profiles  # WSL中自定义配置文件路径
+        target: /res/profiles  # EdgeX容器内配置文件默认路径
         read_only: true
         bind:
           create_host_path: true
