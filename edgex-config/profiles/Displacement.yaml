@@ -1,0 +1,30 @@
+# 单风荷载传感器核心配置文件（简化版）
+name: WindLoad
+manufacturer: PV-Monitor
+model: WL-100
+labels: [wind, load, pv-bracket]
+description: "柔性光伏支架单风荷载传感器(100Hz刷新:风速+风压)"
+deviceResources:
+  - name: WindSpeed
+    description: "光伏阵列位置实时风速(m/s)"
+    properties:
+      valueType: Float64
+      readWrite: R
+      unit: m/s
+      minimum: 0.0
+      maximum: 50.0
+  - name: WindPressure
+    description: "光伏支架表面风压(Pa)"
+    properties:
+      valueType: Float64
+      readWrite: R
+      unit: Pa
+      minimum: 0.0
+      maximum: 2000.0
+deviceCommands:
+  - name: GetWindLoadData
+    isHidden: false
+    readWrite: R
+    resourceOperations:
+      - deviceResource: WindSpeed
+      - deviceResource: WindPressure
