@@ -1,0 +1,643 @@
+#  * Copyright 2024 Intel Corporation.
+#  *
+#  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+#  * in compliance with the License. You may obtain a copy of the License at
+#  *
+#  * http://www.apache.org/licenses/LICENSE-2.0
+#  *
+#  * Unless required by applicable law or agreed to in writing, software distributed under the License
+#  * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+#  * or implied. See the License for the specific language governing permissions and limitations under
+#  * the License.
+#  *
+#  * EdgeX Foundry, Odessa WIP release
+#  *******************************************************************************/
+#
+#
+#
+# ************************ This is a generated compose file ****************************
+#
+# DO NOT MAKE CHANGES that are intended to be permanent to EdgeX edgex-compose repo.
+#
+# Permanent changes can be made to the source compose files located in the compose-builder folder
+# at the top level of the edgex-compose repo.
+#
+# From the compose-builder folder use `make build` to regenerate all standard compose files variations
+#
+# Generated with: Docker Compose version v2.38.1
+name: edgex
+services:
+  app-rules-engine:
+    command:
+      - --registry
+      - -cp=keeper.http://edgex-core-keeper:59890
+    container_name: edgex-app-rules-engine
+    depends_on: 
+      core-common-config-bootstrapper:
+        condition: service_started
+        required: true
+      core-keeper:
+        condition: service_started
+        required: true
+      core-metadata:
+        condition: service_started
+        required: true
+    environment:
+      EDGEX_PROFILE: rules-engine
+      EDGEX_SECURITY_SECRET_STORE: "false"
+      SERVICE_HOST: edgex-app-rules-engine
+    hostname: edgex-app-rules-engine
+    image: nexus3.edgexfoundry.org:10004/app-service-configurable:latest
+    networks:
+      edgex-network: null
+    ports:
+      - mode: ingress
+        host_ip: 127.0.0.1
+        target: 59701
+        published: "59701"
+        protocol: tcp
+    read_only: true
+    restart: always
+    security_opt:
+      - no-new-privileges:true
+    user: 2002:2001
+    volumes:
+      - type: bind
+        source: /etc/localtime
+        target: /etc/localtime
+        read_only: true
+        bind:
+          create_host_path: true
+  core-command:
+    command:
+      - --registry
+      - -cp=keeper.http://edgex-core-keeper:59890
+    container_name: edgex-core-command
+    depends_on:
+      core-common-config-bootstrapper:
+        condition: service_started
+        required: true
+      core-keeper:
+        condition: service_started
+        required: true
+      core-metadata:
+        condition: service_started
+        required: true
+      database:
+        condition: service_started
+        required: true
+    environment:
+      EDGEX_SECURITY_SECRET_STORE: "false"
+      EXTERNALMQTT_URL: tcp://edgex-mqtt-broker:1883
+      SERVICE_HOST: edgex-core-command
+    hostname: edgex-core-command
+    image: nexus3.edgexfoundry.org:10004/core-command:latest
+    networks:
+      edgex-network: null
+    ports:
+      - mode: ingress
+        host_ip: 127.0.0.1
+        target: 59882
+        published: "59882"
+        protocol: tcp
+    read_only: true
+    restart: always
+    security_opt:
+      - no-new-privileges:true
+    user: 2002:2001
+    volumes:
+      - type: bind
+        source: /etc/localtime
+        target: /etc/localtime
+        read_only: true
+        bind:
+          create_host_path: true
+  core-common-config-bootstrapper:
+    command:
+      - /core-common-config-bootstrapper
+      - --registry
+      - -cp=keeper.http://edgex-core-keeper:59890
+    container_name: edgex-core-common-config-bootstrapper
+    depends_on:
+      core-keeper:
+        condition: service_started
+        required: true
+    environment:
+      ALL_SERVICES_DATABASE_HOST: edgex-postgres
+      ALL_SERVICES_MESSAGEBUS_HOST: edgex-mqtt-broker
+      ALL_SERVICES_REGISTRY_HOST: edgex-core-keeper
+      APP_SERVICES_CLIENTS_CORE_METADATA_HOST: edgex-core-metadata
+      DEVICE_SERVICES_CLIENTS_CORE_METADATA_HOST: edgex-core-metadata
+      EDGEX_SECURITY_SECRET_STORE: "false"
+    hostname: edgex-core-common-config-bootstrapper
+    image: nexus3.edgexfoundry.org:10004/core-common-config-bootstrapper:latest
+    networks:
+      edgex-network: null
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    user: 2002:2001
+    volumes:
+      - type: bind
+        source: /etc/localtime
+        target: /etc/localtime
+        read_only: true
+        bind:
+          create_host_path: true
+  core-data:
+    command:
+      - --registry
+      - -cp=keeper.http://edgex-core-keeper:59890
+      # 新增InfluxDB连接参数（根据EdgeX core-data对InfluxDB的适配配置）
+      - --database.type=InfluxDB
+      - --database.influxdb.url=http://edgex-influxdb:8086
+      - --database.influxdb.org=edgex_org
+      - --database.influxdb.bucket=edgex_bucket
+      - --database.influxdb.token=edgex_admin_token
+    container_name: edgex-core-data
+    depends_on:
+      core-common-config-bootstrapper:
+        condition: service_started
+        required: true
+      core-keeper:
+        condition: service_started
+        required: true
+      database:
+        condition: service_started
+        required: true
+    environment:
+      EDGEX_SECURITY_SECRET_STORE: "false"
+      SERVICE_HOST: edgex-core-data
+    # 删除原PostgreSQL相关环境变量，新增InfluxDB必要配置
+      DATABASE_TYPE: InfluxDB
+      INFLUXDB_URL: http://edgex-influxdb:8086
+      INFLUXDB_ORG: edgex_org
+      INFLUXDB_BUCKET: edgex_bucket
+      INFLUXDB_TOKEN: edgex_admin_token
+
+    hostname: edgex-core-data
+    image: nexus3.edgexfoundry.org:10004/core-data:latest
+    networks:
+      edgex-network: null
+    ports:
+      - mode: ingress
+        host_ip: 127.0.0.1
+        target: 59880
+        published: "59880"
+        protocol: tcp
+    read_only: true
+    restart: always
+    security_opt:
+      - no-new-privileges:true
+    user: 2002:2001
+    volumes:
+      - type: bind
+        source: /etc/localtime
+        target: /etc/localtime
+        read_only: true
+        bind:
+          create_host_path: true
+  core-keeper:
+    container_name: edgex-core-keeper
+    depends_on:
+      database:
+        condition: service_started
+        required: true
+    environment:
+      DATABASE_HOST: edgex-postgres
+      EDGEX_SECURITY_SECRET_STORE: "false"
+      MESSAGEBUS_AUTHMODE: none
+      MESSAGEBUS_HOST: edgex-mqtt-broker
+      MESSAGEBUS_PORT: "1883"
+      MESSAGEBUS_PROTOCOL: tcp
+      MESSAGEBUS_SECRETNAME: ""
+      MESSAGEBUS_TYPE: mqtt
+      SERVICE_HOST: edgex-core-keeper
+    hostname: edgex-core-keeper
+    image: nexus3.edgexfoundry.org:10004/core-keeper:latest
+    networks:
+      edgex-network: null
+    ports:
+      - mode: ingress
+        host_ip: 127.0.0.1
+        target: 59890
+        published: "59890"
+        protocol: tcp
+    read_only: true
+    restart: always
+    security_opt:
+      - no-new-privileges:true
+    user: 2002:2001
+    volumes:
+      - type: bind
+        source: /etc/localtime
+        target: /etc/localtime
+        read_only: true
+        bind:
+          create_host_path: true
+  core-metadata:
+    command:
+      - --registry
+      - -cp=keeper.http://edgex-core-keeper:59890
+    container_name: edgex-core-metadata
+    depends_on:
+      core-keeper:
+        condition: service_started
+        required: true
+      database:
+        condition: service_started
+        required: true
+    environment:
+      EDGEX_SECURITY_SECRET_STORE: "false"
+      SERVICE_HOST: edgex-core-metadata
+    hostname: edgex-core-metadata
+    image: nexus3.edgexfoundry.org:10004/core-metadata:latest
+    networks:
+      edgex-network: null
+    ports:
+      - mode: ingress
+        host_ip: 127.0.0.1
+        target: 59881
+        published: "59881"
+        protocol: tcp
+    read_only: true
+    restart: always
+    security_opt:
+      - no-new-privileges:true
+    user: 2002:2001
+    volumes:
+      - type: bind
+        source: /etc/localtime
+        target: /etc/localtime
+        read_only: true
+        bind:
+          create_host_path: true
+  database:  #  替换原PostgreSQL的database服务；保持服务名不变，避免其他服务依赖失效
+    container_name: edgex-influxdb  # 容器名改为InfluxDB相关
+    image: influxdb:2.7.11-alpine  # 使用InfluxDB 2.x镜像（推荐，支持API和UI）
+    environment:
+      # InfluxDB初始化配置（2.x版本需设置初始用户、组织、桶）
+      DOCKER_INFLUXDB_INIT_MODE: setup
+      DOCKER_INFLUXDB_INIT_USERNAME: edgex_user  # 自定义用户名
+      DOCKER_INFLUXDB_INIT_PASSWORD: edgex_password  # 自定义密码
+      DOCKER_INFLUXDB_INIT_ORG: edgex_org  # 自定义组织名
+      DOCKER_INFLUXDB_INIT_BUCKET: edgex_bucket  # 自定义桶名（对应时序数据存储桶）
+      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: edgex_admin_token  # 管理员Token（用于API访问）
+    hostname: edgex-influxdb
+    networks:
+      edgex-network: null
+    ports:
+      - mode: ingress
+        host_ip: 127.0.0.1
+        target: 8086  # InfluxDB 2.x默认API端口（替换PostgreSQL的5432）
+        published: "8086"
+        protocol: tcp
+    read_only: false  # InfluxDB需要写入权限，关闭read_only
+    restart: always
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - type: bind
+        source: /etc/localtime
+        target: /etc/localtime
+        read_only: true
+        bind:
+          create_host_path: true
+      - type: volume
+        source: influxdb-data  # 新增InfluxDB数据卷
+        target: /var/lib/influxdb2  # InfluxDB 2.x数据存储路径
+        volume: {}
+  device-rest:
+    command:
+      - -cp=keeper.http://edgex-core-keeper:59890
+      - --registry
+    container_name: edgex-device-rest
+    depends_on:
+      core-common-config-bootstrapper:
+        condition: service_started
+        required: true
+      core-data:
+        condition: service_started
+        required: true
+      core-keeper:
+        condition: service_started
+        required: true
+      core-metadata:
+        condition: service_started
+        required: true
+    environment:
+      EDGEX_SECURITY_SECRET_STORE: "false"
+      SERVICE_HOST: edgex-device-rest
+    hostname: edgex-device-rest
+    image: nexus3.edgexfoundry.org:10004/device-rest:latest
+    networks:
+      edgex-network: null
+    ports:
+      - mode: ingress
+        host_ip: 127.0.0.1
+        target: 59986
+        published: "59986"
+        protocol: tcp
+    read_only: true
+    restart: always
+    security_opt:
+      - no-new-privileges:true
+    user: 2002:2001
+    volumes:
+      - type: bind
+        source: /etc/localtime
+        target: /etc/localtime
+        read_only: true
+        bind:
+          create_host_path: true
+  device-virtual:
+    command:
+      - -cp=keeper.http://edgex-core-keeper:59890
+      - --registry
+      - --profile=光伏支架监测
+    container_name: edgex-device-virtual
+    depends_on:
+      core-common-config-bootstrapper:
+        condition: service_started
+        required: true
+      core-data:
+        condition: service_started
+        required: true
+      core-keeper:
+        condition: service_started
+        required: true
+      core-metadata:
+        condition: service_started
+        required: true
+    environment:
+      EDGEX_SECURITY_SECRET_STORE: "false"
+      SERVICE_HOST: edgex-device-virtual
+      # 配置5个模拟传感器
+      DEVICE_VIRTUAL_DEVICES: "WindLoadSensor1,WindLoadSensor2,DisplacementSensor1,AccelerationSensor1,CableForceSensor1"
+      # 每个传感器的模拟参数
+      DEVICE_VIRTUAL_PROFILES: "WindLoad,WindLoad,Displacement,Acceleration,CableForce"
+    hostname: edgex-device-virtual
+    image: nexus3.edgexfoundry.org:10004/device-virtual:latest
+    networks:
+      edgex-network: null
+    ports:
+      - mode: ingress
+        host_ip: 127.0.0.1
+        target: 59900
+        published: "59900"
+        protocol: tcp
+    read_only: true
+    restart: always
+    security_opt:
+      - no-new-privileges:true
+    user: 2002:2001
+    volumes:
+      - type: bind
+        source: /etc/localtime
+        target: /etc/localtime
+        read_only: true
+        bind:
+          create_host_path: true
+  mqtt-broker:
+    command:
+      - /usr/sbin/mosquitto
+      - -c
+      - /mosquitto-no-auth.conf
+    container_name: edgex-mqtt-broker
+    hostname: edgex-mqtt-broker
+    image: eclipse-mosquitto:2.0
+    networks:
+      edgex-network: null
+    ports:
+      - mode: ingress
+        host_ip: 127.0.0.1
+        target: 1883
+        published: "1883"
+        protocol: tcp
+    read_only: true
+    restart: always
+    security_opt:
+      - no-new-privileges:true
+    user: 2002:2001
+  rules-engine:
+    container_name: edgex-kuiper
+    depends_on:
+      database:
+        condition: service_started
+        required: true
+      mqtt-broker:
+        condition: service_started
+        required: true
+    environment:
+      CONNECTION__EDGEX__MQTTMSGBUS__OPTIONAL__CLIENTID: kuiper-rules-engine
+      CONNECTION__EDGEX__MQTTMSGBUS__OPTIONAL__KEEPALIVE: "500"
+      CONNECTION__EDGEX__MQTTMSGBUS__PORT: "1883"
+      CONNECTION__EDGEX__MQTTMSGBUS__PROTOCOL: tcp
+      CONNECTION__EDGEX__MQTTMSGBUS__SERVER: edgex-mqtt-broker
+      CONNECTION__EDGEX__MQTTMSGBUS__TYPE: mqtt
+      EDGEX__DEFAULT__OPTIONAL__CLIENTID: kuiper-rules-engine
+      EDGEX__DEFAULT__OPTIONAL__KEEPALIVE: "500"
+      EDGEX__DEFAULT__PORT: "1883"
+      EDGEX__DEFAULT__PROTOCOL: tcp
+      EDGEX__DEFAULT__SERVER: edgex-mqtt-broker
+      EDGEX__DEFAULT__TOPIC: edgex/rules-events
+      EDGEX__DEFAULT__TYPE: mqtt
+      KUIPER__BASIC__CONSOLELOG: "true"
+      KUIPER__BASIC__ENABLEOPENZITI: "false"
+      KUIPER__BASIC__RESTPORT: "59720"
+    hostname: edgex-kuiper
+    image: lfedge/ekuiper:2.1-alpine
+    networks:
+      edgex-network: null
+    ports:
+      - mode: ingress
+        host_ip: 127.0.0.1
+        target: 59720
+        published: "59720"
+        protocol: tcp
+    read_only: true
+    restart: always
+    security_opt:
+      - no-new-privileges:true
+    user: kuiper:kuiper
+    volumes:
+      - type: bind
+        source: /etc/localtime
+        target: /etc/localtime
+        read_only: true
+        bind:
+          create_host_path: true
+      - type: volume
+        source: kuiper-data
+        target: /kuiper/data
+        volume: {}
+      - type: volume
+        source: kuiper-etc
+        target: /kuiper/etc
+        volume: {}
+      - type: volume
+        source: kuiper-log
+        target: /kuiper/log
+        volume: {}
+      - type: volume
+        source: kuiper-plugins
+        target: /kuiper/plugins
+        volume: {}
+  support-notifications:
+    command:
+      - --registry
+      - -cp=keeper.http://edgex-core-keeper:59890
+    container_name: edgex-support-notifications
+    depends_on:
+      core-common-config-bootstrapper:
+        condition: service_started
+        required: true
+      core-keeper:
+        condition: service_started
+        required: true
+      database:
+        condition: service_started
+        required: true
+    environment:
+      EDGEX_SECURITY_SECRET_STORE: "false"
+      SERVICE_HOST: edgex-support-notifications
+    hostname: edgex-support-notifications
+    image: nexus3.edgexfoundry.org:10004/support-notifications:latest
+    networks:
+      edgex-network: null
+    ports:
+      - mode: ingress
+        host_ip: 127.0.0.1
+        target: 59860
+        published: "59860"
+        protocol: tcp
+    read_only: true
+    restart: always
+    security_opt:
+      - no-new-privileges:true
+    user: 2002:2001
+    volumes:
+      - type: bind
+        source: /etc/localtime
+        target: /etc/localtime
+        read_only: true
+        bind:
+          create_host_path: true
+  support-scheduler:
+    command:
+      - --registry
+      - -cp=keeper.http://edgex-core-keeper:59890
+    container_name: edgex-support-scheduler
+    depends_on:
+      core-common-config-bootstrapper:
+        condition: service_started
+        required: true
+      core-keeper:
+        condition: service_started
+        required: true
+      database:
+        condition: service_started
+        required: true
+    environment:
+      EDGEX_SECURITY_SECRET_STORE: "false"
+      SERVICE_HOST: edgex-support-scheduler
+    hostname: edgex-support-scheduler
+    image: nexus3.edgexfoundry.org:10004/support-scheduler:latest
+    networks:
+      edgex-network: null
+    ports:
+      - mode: ingress
+        host_ip: 127.0.0.1
+        target: 59863
+        published: "59863"
+        protocol: tcp
+    read_only: true
+    restart: always
+    security_opt:
+      - no-new-privileges:true
+    user: 2002:2001
+    volumes:
+      - type: bind
+        source: /etc/localtime
+        target: /etc/localtime
+        read_only: true
+        bind:
+          create_host_path: true
+  ui:
+    container_name: edgex-ui-go
+    environment:
+      EDGEX_SECURITY_SECRET_STORE: "false"
+      SERVICE_HOST: edgex-ui-go
+    hostname: edgex-ui-go
+    image: nexus3.edgexfoundry.org:10004/edgex-ui:latest
+    networks:
+      edgex-network: null
+    ports:
+      - mode: ingress
+        target: 4000
+        published: "4000"
+        protocol: tcp
+    read_only: true
+    restart: always
+    security_opt:
+      - no-new-privileges:true
+    user: 2002:2001
+    volumes:
+      - type: bind
+        source: /etc/localtime
+        target: /etc/localtime
+        read_only: true
+        bind:
+          create_host_path: true
+  grafana:  # 新增Grafana服务配置
+    container_name: edgex-grafana
+    image: grafana/grafana:10.2.2
+    environment:
+      GF_SECURITY_ADMIN_USER: admin  # 默认管理员用户名
+      GF_SECURITY_ADMIN_PASSWORD: admin  # 默认管理员密码（首次登录需修改）
+      GF_USERS_ALLOW_SIGN_UP: "false"  # 禁用注册功能
+    hostname: edgex-grafana
+    depends_on:
+      database:  # 依赖InfluxDB数据库服务
+        condition: service_started
+        required: true
+    networks:
+      edgex-network: null  # 加入现有网络
+    ports:
+      - mode: ingress
+        host_ip: 127.0.0.1
+        target: 3000  # Grafana默认端口
+        published: "3000"
+        protocol: tcp
+    restart: always
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - type: bind
+        source: /etc/localtime
+        target: /etc/localtime
+        read_only: true
+        bind:
+          create_host_path: true
+      - type: volume
+        source: grafana-data  # 新增Grafana数据卷
+        target: /var/lib/grafana
+        volume: {}
+networks:
+  edgex-network:
+    name: edgex_edgex-network
+    driver: bridge
+volumes:
+  influxdb-data:
+    name: edgex_influxdb-data
+  kuiper-data:
+    name: edgex_kuiper-data
+  kuiper-etc:
+    name: edgex_kuiper-etc
+  kuiper-log:
+    name: edgex_kuiper-log
+  kuiper-plugins:
+    name: edgex_kuiper-plugins
+  # 新增Grafana数据卷
+  grafana-data:
+    name: edgex_grafana-data
