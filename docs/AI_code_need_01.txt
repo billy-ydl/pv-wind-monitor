@@ -1,0 +1,44 @@
+一、软件开发总体需求
+1. 目标：柔性光伏支架组成的风荷载及支架动态监测
+2. 功能：
+  （1） 动态监测光伏阵列不同位置的风荷载变化情况及柔性光伏支架的动力学（包括位移、转动角度、加速度、振动频率、索力等参数）响应数据的变化。
+  （2） 云端显示光伏阵列布置情况，及各类型传感器的设置位置。
+  （3） 对各传感器获得的信号、数据进行处理，在云端实时通过曲线、云图等方式进行显示。
+  （4）数据存储、历史数据参看。
+  （5）各类型传感器数量约100个。
+  （6）数据刷新频率约100Hz
+3. 软件配置要求： 
+   （1）采用传感器、边缘网关和云端3层架构。
+   （2）边缘网关采用edgex foundary框架，版本为当前最新稳定版。
+   （3）操作系统为windows，使用wsl2模式，基于docker容器开发，容器部署使用docker compose工具。
+   （4）实时数据存储采用influxdb数据库。
+   （5）开发IDE采用vs code，云端采用python语言开发，边缘网关的二次开发可使用c语言或python。
+4. 文件目录配置：
+pv-wind-monitor/
+├── docker/
+│   ├── python-app/
+│   └── edgex/
+├── python-platform/
+│   ├── src/
+│   │   ├── data_collect/
+│   │   ├── data_process/
+│   │   ├── visualization/
+│   │   ├── alarm/
+│   │   ├── storage/
+│   │   └── report/
+│   ├── tests/
+│   └── config/
+├── edgex-module/
+│   ├── c-src/
+│   └── edgex-config/
+├── sensor-drivers/
+│   ├── vendor-drivers/
+│   └── adaptor/
+└── docs/
+
+二、当前主要任务：按步骤规划设计一个测评平台。
+（1）依据以上功能需求，在一台电脑上搭建一个模拟测试平台。
+（2）采用devices-virtual模拟5个传感器，生成随机数。
+（3）边缘网关1个。
+（4）自定义设备配置文件基于Edgex Foundary当前最新稳定版的docker-compose-no-secty.yml
+（5）云端同样设置在本电脑，模拟实现边缘网关与云端的通信。
